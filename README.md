@@ -133,27 +133,6 @@ spam-detector-train
 
 Training removes nulls and duplicates from `data/spam.csv`, prints the benchmark, refits on all rows, and overwrites the three files in `models/`.
 
-## Tests
+## Future work
 
-```bash
-python -m unittest discover -s tests -v
-```
-
-Seven tests cover text cleaning and a few known spam and ham messages.
-
-## Dataset and limits
-
-The SMS Spam Collection has 5,572 rows. After removing duplicates and nulls, 5,169 remain: 4,516 legitimate and 653 spam, so spam is 12.6% of the data.
-
-- The training data is SMS, not email. Long email bodies are untested.
-- There is no URL or sender check, so a careful phishing message can pass.
-- Recall is 87.8%, which means about one in eight spam messages is missed.
-
-## Design notes
-
-- TF-IDF with bigrams and 4,000 features. Five thousand short messages do not need a bigger model, and sparse linear models train in seconds.
-- Soft voting across four models. Naive Bayes handles word frequencies, LinearSVC draws a clean boundary, ExtraTrees picks up token interactions, and logistic regression adds a stable linear view. The SVM carries the highest weight at 2.0.
-
-## Notebook
-
-`notebook/spam_detection.ipynb` has the exploratory work: class balance, message lengths, word clouds, confusion matrices, and a comparison of eight classifiers.
+The next version should add forensic metadata and URL analysis. Sender details, message headers, link reputation, and domain age would let the model judge the message text and its links together.
