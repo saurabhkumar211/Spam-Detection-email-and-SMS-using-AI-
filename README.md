@@ -1,6 +1,6 @@
 # Spam and phishing detection for email and SMS
 
-A machine learning app that reads a message and decides whether it is spam or legitimate. One classifier sits behind two interfaces: a Flask web app and a CustomTkinter desktop app. Both show a label, a spam probability, and the words that pushed the decision.
+A machine learning app that reads a message and decides whether it is spam or legitimate. The Flask web app shows a label, a spam probability, and the words that pushed the decision.
 
 The model is trained on the SMS Spam Collection dataset and evaluated on a held-out 20% split. The full pipeline runs on a laptop CPU in about a minute.
 
@@ -41,7 +41,6 @@ The training script evaluates on the 80/20 split, then refits the final model on
 │   ├── config.py           # Project paths
 │   ├── classifier.py       # Preprocessing, prediction and explanations
 │   ├── app.py              # Flask web app
-│   ├── gui.py              # Desktop app
 │   ├── train.py            # Training and evaluation
 │   └── templates/
 │       └── index.html      # Web interface
@@ -57,9 +56,7 @@ The training script evaluates on the 80/20 split, then refits the final model on
 │   └── spam_detection.ipynb
 ├── pyproject.toml
 ├── requirements.txt
-├── Dockerfile
-├── run_web.command         # macOS / Linux launcher for the web app
-└── run_gui.command         # macOS / Linux launcher for the desktop app
+└── run_web.command         # macOS / Linux launcher
 ```
 
 ## Install
@@ -74,17 +71,13 @@ source venv/bin/activate
 pip install -e .
 ```
 
-The editable install adds the three commands used below and pulls the packages listed in `requirements.txt`. On Windows, activate the environment with `venv\Scripts\activate`.
+The editable install adds the two commands used below and pulls the packages listed in `requirements.txt`. On Windows, activate the environment with `venv\Scripts\activate`.
 
-The two `.command` launchers pick up `venv/bin/python` automatically when that environment exists, so you can double-click them without activating anything first.
+The `run_web.command` launcher picks up `venv/bin/python` automatically when that environment exists, so you can double-click it without activating anything first.
 
-NLTK downloads the `punkt`, `punkt_tab` and `stopwords` corpora the first time `classifier.py` is imported. The downloads need a network connection. After that, the apps work offline.
-
-If you use Homebrew Python on macOS, Tk is packaged separately. Install it with `brew install python-tk@3.14` before running the desktop app. Without it you will see `ModuleNotFoundError: No module named '_tkinter'`.
+NLTK downloads the `punkt`, `punkt_tab` and `stopwords` corpora the first time `classifier.py` is imported. The downloads need a network connection. After that, the app works offline.
 
 ## Usage
-
-### Web app
 
 ```bash
 spam-detector-web
@@ -98,13 +91,7 @@ To expose it on a different host or port, set `HOST` and `PORT`:
 HOST=0.0.0.0 PORT=8080 spam-detector-web
 ```
 
-### Desktop app
-
-```bash
-spam-detector-gui
-```
-
-The desktop app has dark and light themes, live confidence bars, keyword breakdowns, and batch processing. On macOS you can also double-click `run_web.command` or `run_gui.command`.
+On macOS you can also double-click `run_web.command`.
 
 ### Batch files
 
@@ -134,15 +121,6 @@ There are two more endpoints:
 - `POST /api/batch` accepts a multipart `file` field and returns per-row results with spam and ham counts.
 - `POST /api/download_csv` takes the JSON results and returns a CSV file.
 
-### Docker
-
-```bash
-docker build -t spam-detector .
-docker run -p 5000:5000 spam-detector
-```
-
-The image sets `HOST=0.0.0.0`. Local runs bind to `127.0.0.1` unless you override it.
-
 ## Retrain
 
 ```bash
@@ -171,7 +149,7 @@ The choices that shaped the result:
 - A soft-voting ensemble instead of a single model. Naive Bayes handles word frequencies well, LinearSVC gives a clean boundary, ExtraTrees picks up interactions between tokens, and logistic regression adds a stable linear view. The SVM carries the highest weight at 2.0, with Naive Bayes and ExtraTrees at 1.5 and logistic regression at 1.0.
 - Precision over recall. The model blocks very few legitimate messages (2 out of 903) and accepts that it misses some spam (16 out of 131).
 - Explanations come from model weights. `classifier.py` reads the Naive Bayes log probability difference for each token, so the highlighted keywords reflect what the model learned.
-- One preprocessing path. Every interface calls the same `classifier.py`, which keeps the web app, desktop app and training data on identical cleaning steps.
+- One prediction path. The single-message checker and batch upload both call `classifier.py`, so the same text always gets the same result.
 
 ## Limitations
 

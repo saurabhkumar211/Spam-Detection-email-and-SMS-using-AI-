@@ -1,10 +1,9 @@
-# Runtime: web and desktop apps
+# Runtime: Flask web app
 flask>=3.0
 scikit-learn>=1.5
 nltk>=3.8.1
 pandas>=2.0
 numpy>=1.24
-customtkinter>=5.2
 
 # Notebook only: charts and word cloud
 matplotlib>=3.7
