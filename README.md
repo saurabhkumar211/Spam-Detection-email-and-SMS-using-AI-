@@ -1,12 +1,12 @@
 # Spam and phishing detection for email and SMS
 
-A machine learning app that reads a message and decides whether it is spam or legitimate. The Flask web app shows a label, a spam probability, and the words that pushed the decision.
+A machine learning app that reads a message and decides whether it is spam or legitimate. The Flask web app shows the label, the spam probability, and the words that pushed the decision.
 
-The model is trained on the SMS Spam Collection dataset and evaluated on a held-out 20% split. The full pipeline runs on a laptop CPU in about a minute.
+The model trains on the SMS Spam Collection and is evaluated on a held-out 20% split. Training takes about a minute on a laptop CPU.
 
 ## Results
 
-Held-out test set: 1,034 messages, 903 legitimate and 131 spam.
+The test set has 1,034 messages: 903 legitimate and 131 spam.
 
 | Metric | Score |
 | --- | --- |
@@ -21,16 +21,16 @@ Held-out test set: 1,034 messages, 903 legitimate and 131 spam.
 | Actual ham | 901 | 2 |
 | Actual spam | 16 | 115 |
 
-Two legitimate messages were flagged as spam, and sixteen spam messages were missed. That trade-off is deliberate. In a messaging product, hiding a real message is worse than letting one spam text through, so the decision threshold sits at 0.5. You can move it in `classifier.py` if you care more about recall.
+Two legitimate messages were flagged and sixteen spam messages were missed. That trade-off is deliberate. In a messaging product, hiding a real message is worse than letting one spam text through, so the threshold sits at 0.5. You can change it in `classifier.py`.
 
 ## How it works
 
-1. Normalize the text: lowercase, tokenize with NLTK, remove stopwords and punctuation, then apply Porter stemming.
+1. Clean the text: lowercase, tokenize with NLTK, remove stopwords and punctuation, then apply Porter stemming.
 2. Vectorize with TF-IDF: unigrams and bigrams, 4,000 features, sublinear term frequency.
 3. Classify with a soft-voting ensemble of Multinomial Naive Bayes, calibrated LinearSVC, ExtraTrees and LogisticRegression, weighted 1.5, 2.0, 1.5 and 1.0.
-4. Explain the result with the tokens that pushed the message toward spam. These come from the Naive Bayes feature log probabilities, not from a hand-written keyword list.
+4. Show the tokens that pushed the message toward spam, taken from the Naive Bayes feature log probabilities.
 
-The training script evaluates on the 80/20 split, then refits the final model on every cleaned row before saving it.
+Training scores the 80/20 split, then refits on every cleaned row before saving the model.
 
 ## Project structure
 
@@ -61,7 +61,7 @@ The training script evaluates on the 80/20 split, then refits the final model on
 
 ## Install
 
-Use Python 3.11 or newer. The model files here were built with Python 3.14 and scikit-learn 1.9.1.
+Python 3.11 or newer. The model files were built with Python 3.14 and scikit-learn 1.9.1.
 
 ```bash
 git clone https://github.com/saurabhkumar211/Spam-Detection-email-and-SMS-using-AI-.git
@@ -71,11 +71,9 @@ source venv/bin/activate
 pip install -e .
 ```
 
-The editable install adds the two commands used below and pulls the packages listed in `requirements.txt`. On Windows, activate the environment with `venv\Scripts\activate`.
+The install adds `spam-detector-web` and `spam-detector-train`. On Windows, activate the environment with `venv\Scripts\activate`.
 
-The `run_web.command` launcher picks up `venv/bin/python` automatically when that environment exists, so you can double-click it without activating anything first.
-
-NLTK downloads the `punkt`, `punkt_tab` and `stopwords` corpora the first time `classifier.py` is imported. The downloads need a network connection. After that, the app works offline.
+The first run downloads the NLTK `punkt`, `punkt_tab` and `stopwords` corpora, so it needs a network connection once.
 
 ## Usage
 
@@ -83,19 +81,19 @@ NLTK downloads the `punkt`, `punkt_tab` and `stopwords` corpora the first time `
 spam-detector-web
 ```
 
-Open http://127.0.0.1:5000. The page has a single-message checker with sample messages, batch upload with CSV export, and the model metrics shown at the bottom.
+Open http://127.0.0.1:5000. The page checks a single message, loads sample messages, and accepts a CSV or TXT file for batch classification with CSV export.
 
-To expose it on a different host or port, set `HOST` and `PORT`:
+To change the host or port, set `HOST` and `PORT`:
 
 ```bash
 HOST=0.0.0.0 PORT=8080 spam-detector-web
 ```
 
-On macOS you can also double-click `run_web.command`.
+On macOS you can double-click `run_web.command`. It uses `venv/bin/python` when that folder exists.
 
 ### Batch files
 
-Upload a `.csv` or `.txt` file. For CSV, the app looks for a column named `text`, `v2`, `message`, `sms`, `email`, `content` or `body`, then falls back to the first text column it finds. Classified rows can be downloaded as CSV.
+Upload a `.csv` or `.txt` file. For CSV, the app looks for a column named `text`, `v2`, `message`, `sms`, `email`, `content` or `body`, then falls back to the first text column it finds.
 
 ### API
 
@@ -109,10 +107,10 @@ curl -X POST http://127.0.0.1:5000/api/classify \
 {
   "is_spam": true,
   "label": "Spam",
-  "spam_probability": 97.36,
-  "ham_probability": 2.64,
-  "confidence": 97.36,
-  "flagged_keywords": [["claim", 5.28], ["http", 4.02]]
+  "spam_probability": 98.23,
+  "ham_probability": 1.77,
+  "confidence": 98.23,
+  "flagged_keywords": [["claim", 5.28], ["prize", 5.14], ["free", 1.76]]
 }
 ```
 
@@ -127,7 +125,7 @@ There are two more endpoints:
 spam-detector-train
 ```
 
-Training removes nulls and duplicates from `data/spam.csv`, builds the features, runs the stratified split, prints the benchmark, refits on all rows, and overwrites the three files in `models/`. Expect about a minute on a laptop CPU.
+Training removes nulls and duplicates from `data/spam.csv`, prints the benchmark, refits on all rows, and overwrites the three files in `models/`.
 
 ## Tests
 
@@ -135,36 +133,22 @@ Training removes nulls and duplicates from `data/spam.csv`, builds the features,
 python -m unittest discover -s tests -v
 ```
 
-The tests cover text cleaning and a handful of known spam and ham messages.
+Seven tests cover text cleaning and a few known spam and ham messages.
 
-## Dataset
+## Dataset and limits
 
-The SMS Spam Collection starts with 5,572 rows. After removing duplicates and nulls, 5,169 remain: 4,516 legitimate messages and 653 spam messages. Spam is 12.6% of the data, and the stratified split keeps that ratio in both train and test.
+The SMS Spam Collection has 5,572 rows. After removing duplicates and nulls, 5,169 remain: 4,516 legitimate and 653 spam, so spam is 12.6% of the data.
+
+- The training data is SMS, not email. Long email bodies are untested.
+- There is no URL or sender check, so a careful phishing message can pass.
+- Recall is 87.8%, which means about one in eight spam messages is missed.
 
 ## Design notes
 
-The choices that shaped the result:
-
-- TF-IDF with bigrams and 4,000 features. With roughly five thousand short messages, sparse linear models train in seconds and generalize well. A transformer would be overkill and slower to demo.
-- A soft-voting ensemble instead of a single model. Naive Bayes handles word frequencies well, LinearSVC gives a clean boundary, ExtraTrees picks up interactions between tokens, and logistic regression adds a stable linear view. The SVM carries the highest weight at 2.0, with Naive Bayes and ExtraTrees at 1.5 and logistic regression at 1.0.
-- Precision over recall. The model blocks very few legitimate messages (2 out of 903) and accepts that it misses some spam (16 out of 131).
-- Explanations come from model weights. `classifier.py` reads the Naive Bayes log probability difference for each token, so the highlighted keywords reflect what the model learned.
-- One prediction path. The single-message checker and batch upload both call `classifier.py`, so the same text always gets the same result.
-
-## Limitations
-
-- The training data is SMS, not email. Long bodies and HTML email are out of distribution, so treat email results as untested.
-- There is no URL reputation, domain age or sender check. A short, well-written phishing message can still pass.
-- Recall is 87.8%, which means roughly one in eight spam messages gets through.
-- The saved artifacts depend on the scikit-learn version that created them. If loading fails after an upgrade, run `spam-detector-train` again.
-
-## Possible next steps
-
-- Add URL and sender features. They matter more for email than word frequencies do.
-- Train separate models for SMS and email rather than sharing one.
-- Calibrate probabilities per channel so a confidence score means the same thing everywhere.
-- Store corrected labels from user feedback and retrain on them.
+- TF-IDF with bigrams and 4,000 features. Five thousand short messages do not need a bigger model, and sparse linear models train in seconds.
+- Soft voting across four models. Naive Bayes handles word frequencies, LinearSVC draws a clean boundary, ExtraTrees picks up token interactions, and logistic regression adds a stable linear view. The SVM carries the highest weight at 2.0.
+- Precision over recall. The model blocks 2 of 903 legitimate messages and misses 16 of 131 spam messages.
 
 ## Notebook
 
-`notebook/spam_detection.ipynb` holds the exploratory work: class balance, message length distributions, word clouds, confusion matrices, and a comparison of Naive Bayes, SVM, ExtraTrees, Random Forest, Logistic Regression, k-nearest neighbours, Decision Tree and Gaussian Naive Bayes. Its baseline artifacts are written to `models/nb_baseline*.pkl` and are separate from the production ensemble.
+`notebook/spam_detection.ipynb` has the exploratory work: class balance, message lengths, word clouds, confusion matrices, and a comparison of eight classifiers.
