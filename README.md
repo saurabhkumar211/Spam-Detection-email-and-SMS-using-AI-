@@ -32,6 +32,10 @@ Two legitimate messages were flagged and sixteen spam messages were missed. That
 
 Training scores the 80/20 split, then refits on every cleaned row before saving the model.
 
+## Notebook
+
+The main ML record is [`notebook/spam_detection.ipynb`](notebook/spam_detection.ipynb). It walks through data cleaning, exploratory data analysis, text preprocessing, word clouds, top spam and ham words, model comparison, voting, and stacking. The production version of the pipeline is `src/spam_detector/train.py`.
+
 ## Project structure
 
 ```
@@ -53,7 +57,7 @@ Training scores the 80/20 split, then refits on every cleaned row before saving 
 │   ├── vectorizer.pkl      # Fitted TF-IDF vectorizer
 │   └── metrics.json        # Benchmark scores
 ├── notebook/
-│   └── spam_detection.ipynb
+│   └── spam_detection.ipynb  # ML walkthrough and experiments
 ├── pyproject.toml
 ├── requirements.txt
 └── run_web.command         # macOS / Linux launcher
