@@ -1,0 +1,18 @@
+# macOS
+.DS_Store
+
+# Python
+__pycache__/
+*.py[cod]
+venv/
+.venv/
+.env
+
+# Local model backups
+*.bak
+
+# Local-only research assets (not part of the code repo)
+AI_Agent_Phishing_Detection_Paper.docx
+Research_Paper_Blueprint_ICICC2027.docx
+create_blueprint_doc.py
+generate_agent_paper_doc.py

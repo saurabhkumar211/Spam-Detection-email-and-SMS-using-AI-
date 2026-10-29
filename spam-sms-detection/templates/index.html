@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Spam & Phishing Detector</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛡️</text></svg>">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0f1117;
+            --bg-secondary: #1a1d27;
+            --bg-card: #1e2230;
+            --bg-input: #14161f;
+            --border-color: #2a2f42;
+            --text-primary: #e8eaf0;
+            --text-secondary: #8b90a5;
+            --accent: #6c5ce7;
+            --accent-hover: #7c6ef0;
+            --spam-bg: #2a1518;
+            --spam-border: #e53935;
+            --spam-text: #ff6b6b;
+            --ham-bg: #0f2a1a;
+            --ham-border: #2e7d32;
+            --ham-text: #51cf66;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            min-height: 100vh;
+        }
+
+        /* Header */
+        .app-header {
+            background: linear-gradient(135deg, #1a1d27 0%, #14161f 100%);
+            border-bottom: 1px solid var(--border-color);
+            padding: 1.2rem 0;
+        }
+        .app-header h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin: 0;
+        }
+        .app-header p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin: 0.2rem 0 0;
+        }
+
+        /* Cards */
+        .card-custom {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+        }
+
+        /* Form controls */
+        .form-control-custom, .form-select-custom {
+            background-color: var(--bg-input) !important;
+            border: 1px solid var(--border-color) !important;
+            color: var(--text-primary) !important;
+            border-radius: 8px;
+        }
+        .form-control-custom:focus, .form-select-custom:focus {
+            border-color: var(--accent) !important;
+            box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.15) !important;
+        }
+        .form-control-custom::placeholder {
+            color: #5a5f73;
+        }
+        select.form-select-custom option {
+            background-color: var(--bg-input);
+            color: var(--text-primary);
+        }
+
+        /* Buttons */
+        .btn-analyze {
+            background: linear-gradient(135deg, #6c5ce7, #5a4bd1);
+            border: none;
+            color: white;
+            font-weight: 600;
+            padding: 0.6rem 1.5rem;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+        .btn-analyze:hover {
+            background: linear-gradient(135deg, #7c6ef0, #6c5ce7);
+            color: white;
+            transform: translateY(-1px);
+        }
+        .btn-secondary-custom {
+            background-color: #2a2f42;
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+        .btn-secondary-custom:hover {
+            background-color: #353b52;
+            color: var(--text-primary);
+        }
+
+        /* Result banner */
+        .result-spam {
+            background: linear-gradient(135deg, #2a1518, #1a0e10);
+            border: 1px solid var(--spam-border);
+            border-radius: 10px;
+            padding: 1rem 1.5rem;
+            text-align: center;
+        }
+        .result-spam h3 { color: var(--spam-text); margin: 0; }
+        .result-ham {
+            background: linear-gradient(135deg, #0f2a1a, #091a10);
+            border: 1px solid var(--ham-border);
+            border-radius: 10px;
+            padding: 1rem 1.5rem;
+            text-align: center;
+        }
+        .result-ham h3 { color: var(--ham-text); margin: 0; }
+        .result-neutral {
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 1rem 1.5rem;
+            text-align: center;
+            color: var(--text-secondary);
+        }
+
+        /* Progress bars */
+        .progress-custom {
+            background-color: var(--bg-input);
+            border-radius: 6px;
+            height: 10px;
+        }
+        .progress-spam .progress-bar { background: linear-gradient(90deg, #e53935, #ff6b6b); }
+        .progress-ham .progress-bar { background: linear-gradient(90deg, #2e7d32, #51cf66); }
+
+        /* Keyword chips */
+        .keyword-chip {
+            display: inline-block;
+            background: rgba(229, 57, 53, 0.15);
+            border: 1px solid rgba(229, 57, 53, 0.4);
+            color: #ff8080;
+            padding: 3px 10px;
+            border-radius: 20px;
+            margin: 3px;
+            font-size: 0.82rem;
+        }
+
+        /* Tabs */
+        .nav-pills .nav-link {
+            color: var(--text-secondary);
+            border-radius: 8px;
+            padding: 0.5rem 1.2rem;
+            margin-right: 4px;
+            transition: all 0.2s;
+        }
+        .nav-pills .nav-link:hover { color: var(--text-primary); }
+        .nav-pills .nav-link.active {
+            background-color: var(--accent);
+            color: white;
+        }
+
+        /* Table */
+        .table-custom {
+            color: var(--text-primary);
+            font-size: 0.9rem;
+        }
+        .table-custom thead th {
+            background-color: var(--bg-secondary);
+            border-bottom: 2px solid var(--border-color);
+            color: var(--text-secondary);
+            font-weight: 600;
+            padding: 0.75rem 0.5rem;
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
+        .table-custom tbody td {
+            border-bottom: 1px solid var(--border-color);
+            padding: 0.6rem 0.5rem;
+            vertical-align: middle;
+        }
+        .table-custom tbody tr:hover { background-color: rgba(108, 92, 231, 0.06); }
+        .badge-spam { background-color: var(--spam-border); color: white; padding: 4px 10px; border-radius: 20px; font-size: 0.8rem; }
+        .badge-ham { background-color: var(--ham-border); color: white; padding: 4px 10px; border-radius: 20px; font-size: 0.8rem; }
+
+        /* Metrics */
+        .metric-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 1rem;
+            text-align: center;
+        }
+        .metric-card .metric-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+        .metric-card .metric-label {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        /* Upload area */
+        .upload-area {
+            border: 2px dashed var(--border-color);
+            border-radius: 12px;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .upload-area:hover {
+            border-color: var(--accent);
+            background: rgba(108, 92, 231, 0.04);
+        }
+        .upload-area.dragover {
+            border-color: var(--accent);
+            background: rgba(108, 92, 231, 0.08);
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: var(--bg-primary); }
+        ::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #3a4055; }
+
+        /* Animations */
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        .fade-in { animation: fadeIn 0.3s ease; }
+
+        /* Status bar */
+        .status-bar {
+            background-color: var(--bg-secondary);
+            border-top: 1px solid var(--border-color);
+            padding: 0.5rem 1.5rem;
+            font-size: 0.82rem;
+            color: var(--text-secondary);
+        }
+    </style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="app-header">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1><i class="bi bi-shield-check me-2"></i>AI Spam & Phishing Detector</h1>
+                <p>Multinomial Naive Bayes Ensemble + TF-IDF &bull; Real-time Email & SMS Classification</p>
+            </div>
+            <span class="badge bg-secondary"><i class="bi bi-cpu me-1"></i> Model Loaded</span>
+        </div>
+    </div>
+</div>
+
+<!-- Main Content -->
+<div class="container py-4">
+
+    <!-- Tabs -->
+    <ul class="nav nav-pills mb-4" id="mainTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" data-bs-toggle="pill" data-bs-target="#tab-single" type="button">
+                <i class="bi bi-envelope me-1"></i> Quick Detector
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" data-bs-toggle="pill" data-bs-target="#tab-batch" type="button">
+                <i class="bi bi-folder2-open me-1"></i> Batch Analyzer
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" data-bs-toggle="pill" data-bs-target="#tab-insights" type="button">
+                <i class="bi bi-graph-up me-1"></i> Model Insights
+            </button>
+        </li>
+    </ul>
+
+    <div class="tab-content">
+
+        <!-- ================= TAB 1: QUICK DETECTOR ================= -->
+        <div class="tab-pane fade show active" id="tab-single">
+            <div class="row">
+                <div class="col-lg-6">
+                    <!-- Input Card -->
+                    <div class="card-custom p-4 mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <label class="form-label fw-bold mb-0"><i class="bi bi-pencil-square me-1"></i> Enter Message</label>
+                        </div>
+
+                        <!-- Sample selector -->
+                        <div class="mb-3">
+                            <select class="form-select form-select-custom" id="sampleSelect">
+                                {% for key, text in samples.items() %}
+                                <option value="{{ key }}">{{ text[:80] }}{% if text|length > 80 %}...{% endif %}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <!-- Text area -->
+                        <textarea class="form-control form-control-custom" id="messageInput" rows="6"
+                                  placeholder="Paste or type an SMS / Email message here..."></textarea>
+
+                        <!-- Char count -->
+                        <div class="d-flex justify-content-between align-items-center mt-2 mb-3">
+                            <small class="text-secondary" id="charCount">0 characters &bull; 0 words</small>
+                            <div>
+                                <button class="btn btn-sm btn-secondary-custom me-1" id="pasteBtn"><i class="bi bi-clipboard"></i> Paste</button>
+                                <button class="btn btn-sm btn-secondary-custom" id="clearBtn"><i class="bi bi-x-lg"></i> Clear</button>
+                            </div>
+                        </div>
+
+                        <!-- Analyze button -->
+                        <button class="btn btn-analyze w-100" id="analyzeBtn">
+                            <i class="bi bi-search me-1"></i> Analyze Message
+                        </button>
+                    </div>
+                </div>
+
+                <div class="col-lg-6">
+                    <!-- Results Card -->
+                    <div class="card-custom p-4">
+                        <label class="form-label fw-bold mb-3"><i class="bi bi-clipboard-data me-1"></i> Analysis Result</label>
+
+                        <div id="resultArea">
+                            <div class="result-neutral" id="neutralResult">
+                                <i class="bi bi-arrow-left-right fs-1 mb-2 d-block"></i>
+                                <p class="mb-0">Enter a message and click "Analyze" to see results</p>
+                            </div>
+                        </div>
+
+                        <!-- Diagnostics -->
+                        <div id="diagnosticsArea" style="display:none;">
+                            <hr class="border-secondary">
+                            <label class="form-label fw-bold small"><i class="bi bi-cpu me-1"></i> NLP Diagnostics</label>
+                            <div id="diagContent" class="small text-secondary" style="white-space: pre-wrap;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= TAB 2: BATCH ANALYZER ================= -->
+        <div class="tab-pane fade" id="tab-batch">
+            <div class="card-custom p-4 mb-4">
+                <label class="form-label fw-bold mb-3"><i class="bi bi-cloud-upload me-1"></i> Upload File for Batch Classification</label>
+
+                <!-- Upload area -->
+                <div class="upload-area" id="uploadArea">
+                    <i class="bi bi-file-earmark-arrow-up fs-1 text-secondary mb-2 d-block"></i>
+                    <p class="mb-1">Drag & drop your file here, or <span class="text-primary">click to browse</span></p>
+                    <small class="text-secondary">Supports .csv (with text column) or .txt (one message per line) &bull; Max 16MB</small>
+                    <input type="file" id="fileInput" accept=".csv,.txt" style="display:none;">
+                </div>
+
+                <div id="fileInfo" class="mt-3" style="display:none;">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span><i class="bi bi-file-earmark-text me-1"></i> <span id="fileName"></span></span>
+                        <div>
+                            <button class="btn btn-sm btn-secondary-custom" id="removeClassifyBtn"><i class="bi bi-x-lg"></i> Remove</button>
+                            <button class="btn btn-sm btn-analyze ms-2" id="classifyBatchBtn"><i class="bi bi-lightning me-1"></i> Classify All</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Batch summary -->
+                <div id="batchSummary" style="display:none;">
+                    <hr class="border-secondary">
+                    <div class="row g-3 mb-3">
+                        <div class="col-3">
+                            <div class="metric-card">
+                                <div class="metric-value" id="batchTotal" style="color: #e8eaf0;">0</div>
+                                <div class="metric-label">Total</div>
+                            </div>
+                        </div>
+                        <div class="col-3">
+                            <div class="metric-card">
+                                <div class="metric-value" id="batchSpam" style="color: #ff6b6b;">0</div>
+                                <div class="metric-label">Spam</div>
+                            </div>
+                        </div>
+                        <div class="col-3">
+                            <div class="metric-card">
+                                <div class="metric-value" id="batchHam" style="color: #51cf66;">0</div>
+                                <div class="metric-label">Legitimate</div>
+                            </div>
+                        </div>
+                        <div class="col-3">
+                            <div class="metric-card">
+                                <div class="metric-value" id="batchRate" style="color: #ffa94d;">0%</div>
+                                <div class="metric-label">Spam Rate</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Filter & Export -->
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div class="d-flex align-items-center">
+                            <label class="me-2 small text-secondary">Filter:</label>
+                            <select class="form-select form-select-custom" id="batchFilter" style="width: auto; padding: 0.3rem 2rem 0.3rem 0.7rem; font-size: 0.85rem;">
+                                <option value="all">All Messages</option>
+                                <option value="spam">Only Spam</option>
+                                <option value="ham">Only Legitimate</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-sm btn-secondary-custom" id="exportBatchBtn">
+                            <i class="bi bi-download me-1"></i> Export CSV
+                        </button>
+                    </div>
+
+                    <!-- Results table -->
+                    <div style="max-height: 400px; overflow-y: auto;">
+                        <table class="table table-custom mb-0">
+                            <thead>
+                                <tr>
+                                    <th style="width:40px;">#</th>
+                                    <th style="width:90px;">Label</th>
+                                    <th style="width:90px;">Confidence</th>
+                                    <th style="width:80px;">Spam %</th>
+                                    <th>Message</th>
+                                </tr>
+                            </thead>
+                            <tbody id="batchTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="batchLoading" style="display:none;">
+                    <div class="text-center py-4">
+                        <div class="spinner-border text-primary" role="status"></div>
+                        <p class="mt-2 text-secondary">Classifying messages...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= TAB 3: MODEL INSIGHTS ================= -->
+        <div class="tab-pane fade" id="tab-insights">
+            <div class="row">
+                <div class="col-lg-5">
+                    <!-- Model Info -->
+                    <div class="card-custom p-4 mb-4">
+                        <label class="form-label fw-bold mb-3"><i class="bi bi-cpu me-1"></i> Model Architecture</label>
+                        <ul class="list-unstyled mb-0 small" style="line-height: 2;">
+                            <li><strong>Primary Classifier:</strong> Soft-Voting Ensemble</li>
+                            <li style="padding-left:1.5rem;" class="text-secondary">MultinomialNB + Calibrated LinearSVC + ExtraTrees + LogisticRegression</li>
+                            <li><strong>Vectorizer:</strong> TF-IDF (n-grams: 1-2, max_features: 4000)</li>
+                            <li><strong>Preprocessing:</strong> Lowercase &rarr; Tokenize &rarr; Stopword removal &rarr; Porter Stemmer</li>
+                            <li><strong>Dataset:</strong> 5,169 SMS & Email messages</li>
+                        </ul>
+                    </div>
+
+                    <!-- Performance Metrics -->
+                    <div class="card-custom p-4">
+                        <label class="form-label fw-bold mb-3"><i class="bi bi-bar-chart me-1"></i> Performance Metrics</label>
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <div class="metric-card">
+                                    <div class="metric-value" style="color: #51cf66;">{{ "%.2f"|format(metrics.test_accuracy) }}%</div>
+                                    <div class="metric-label">Accuracy</div>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="metric-card">
+                                    <div class="metric-value" style="color: #51cf66;">{{ "%.2f"|format(metrics.test_precision) }}%</div>
+                                    <div class="metric-label">Precision</div>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="metric-card">
+                                    <div class="metric-value" style="color: #74c0fc;">{{ "%.2f"|format(metrics.test_recall) }}%</div>
+                                    <div class="metric-label">Recall</div>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="metric-card">
+                                    <div class="metric-value" style="color: #ffa94d;">{{ "%.2f"|format(metrics.test_f1_score) }}%</div>
+                                    <div class="metric-label">F1 Score</div>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="metric-card">
+                                    <div class="metric-value" style="color: #6c5ce7;">{{ "%.2f"|format(metrics.test_roc_auc) }}%</div>
+                                    <div class="metric-label">ROC-AUC</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-7">
+                    <!-- Confusion Matrix -->
+                    <div class="card-custom p-4 mb-4">
+                        <label class="form-label fw-bold mb-3"><i class="bi bi-grid me-1"></i> Confusion Matrix</label>
+                        <div class="d-flex justify-content-center">
+                            <table class="table table-sm text-center" style="width: 70%;">
+                                <thead>
+                                    <tr>
+                                        <th class="text-secondary"></th>
+                                        <th class="text-secondary">Predicted Ham</th>
+                                        <th class="text-secondary">Predicted Spam</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <th class="text-secondary text-start">Actual Ham</th>
+                                        <td style="color: #51cf66; font-weight:700;">{{ metrics.confusion_matrix.true_negatives }}</td>
+                                        <td style="color: #ff6b6b;">{{ metrics.confusion_matrix.false_positives }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th class="text-secondary text-start">Actual Spam</th>
+                                        <td style="color: #ff6b6b;">{{ metrics.confusion_matrix.false_negatives }}</td>
+                                        <td style="color: #51cf66; font-weight:700;">{{ metrics.confusion_matrix.true_positives }}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Top Keywords -->
+                    <div class="card-custom p-4">
+                        <label class="form-label fw-bold mb-3"><i class="bi bi-key me-1"></i> Top 25 Spam Trigger Keywords</label>
+                        <div class="d-flex flex-wrap gap-1">
+                            {% for word, score in top_keywords %}
+                            <span class="keyword-chip">{{ word }} (+{{ "%.2f"|format(score) }})</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- Status Bar -->
+<div class="status-bar">
+    <div class="container d-flex justify-content-between">
+        <span><i class="bi bi-shield-check me-1"></i> Model: Soft-Voting Ensemble &bull; Threshold: 0.50</span>
+        <span>Accuracy: {{ "%.2f"|format(metrics.test_accuracy) }}% &bull; Precision: {{ "%.2f"|format(metrics.test_precision) }}%</span>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+// ===================================================================
+// Quick Detector Tab
+// ===================================================================
+const messageInput = document.getElementById('messageInput');
+const charCount = document.getElementById('charCount');
+const sampleSelect = document.getElementById('sampleSelect');
+const analyzeBtn = document.getElementById('analyzeBtn');
+const pasteBtn = document.getElementById('pasteBtn');
+const clearBtn = document.getElementById('clearBtn');
+const resultArea = document.getElementById('resultArea');
+const diagnosticsArea = document.getElementById('diagnosticsArea');
+const diagContent = document.getElementById('diagContent');
+
+// Character counter
+messageInput.addEventListener('input', () => {
+    const text = messageInput.value;
+    const chars = text.length;
+    const words = text.trim() ? text.trim().split(/\s+/).length : 0;
+    charCount.textContent = `${chars} characters • ${words} words`;
+});
+
+// Sample selector
+sampleSelect.addEventListener('change', () => {
+    const key = sampleSelect.value;
+    if (key) {
+        messageInput.value = samples_data[key] || '';
+        messageInput.dispatchEvent(new Event('input'));
+    }
+});
+
+// Paste button
+pasteBtn.addEventListener('click', async () => {
+    try {
+        const text = await navigator.clipboard.readText();
+        messageInput.value = text;
+        messageInput.dispatchEvent(new Event('input'));
+    } catch (e) {
+        alert('Unable to access clipboard. Please paste manually.');
+    }
+});
+
+// Clear button
+clearBtn.addEventListener('click', () => {
+    messageInput.value = '';
+    sampleSelect.value = '';
+    messageInput.dispatchEvent(new Event('input'));
+    resultArea.innerHTML = '<div class="result-neutral"><i class="bi bi-arrow-left-right fs-1 mb-2 d-block"></i><p class="mb-0">Enter a message and click "Analyze" to see results</p></div>';
+    diagnosticsArea.style.display = 'none';
+});
+
+// Analyze button
+analyzeBtn.addEventListener('click', async () => {
+    const text = messageInput.value.trim();
+    if (!text) {
+        alert('Please enter a message to analyze.');
+        return;
+    }
+
+    analyzeBtn.disabled = true;
+    analyzeBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Analyzing...';
+
+    try {
+        const res = await fetch('/api/classify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text: text })
+        });
+        const data = await res.json();
+
+        if (data.error) {
+            alert(data.error);
+            return;
+        }
+
+        displayResult(data);
+    } catch (e) {
+        alert('Error connecting to server.');
+    } finally {
+        analyzeBtn.disabled = false;
+        analyzeBtn.innerHTML = '<i class="bi bi-search me-1"></i> Analyze Message';
+    }
+});
+
+function displayResult(data) {
+    const isSpam = data.is_spam;
+    const confidence = data.confidence;
+    const spamProb = data.spam_probability;
+    const hamProb = data.ham_probability;
+
+    resultArea.innerHTML = `
+        <div class="fade-in">
+            ${isSpam
+                ? `<div class="result-spam"><h3><i class="bi bi-exclamation-triangle-fill"></i> SPAM / PHISHING DETECTED</h3><p class="mt-2 mb-0">Confidence: <strong>${confidence}%</strong></p></div>`
+                : `<div class="result-ham"><h3><i class="bi bi-check-circle-fill"></i> LEGITIMATE MESSAGE (HAM)</h3><p class="mt-2 mb-0">Confidence: <strong>${confidence}%</strong></p></div>`
+            }
+            <div class="row g-3 mt-3">
+                <div class="col-6">
+                    <small class="text-secondary">Spam Probability</small>
+                    <div class="fs-5 fw-bold" style="color:#ff6b6b;">${spamProb}%</div>
+                    <div class="progress progress-custom progress-spam"><div class="progress-bar" style="width:${spamProb}%"></div></div>
+                </div>
+                <div class="col-6">
+                    <small class="text-secondary">Legitimate Probability</small>
+                    <div class="fs-5 fw-bold" style="color:#51cf66;">${hamProb}%</div>
+                    <div class="progress progress-custom progress-ham"><div class="progress-bar" style="width:${hamProb}%"></div></div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    // Diagnostics
+    diagnosticsArea.style.display = 'block';
+    let diagText = `Processed Tokens: ${data.transformed_text || '[None]'}\n`;
+    if (data.flagged_keywords && data.flagged_keywords.length > 0) {
+        diagText += `\nHigh-Risk Spam Keywords:\n`;
+        for (const [word, score] of data.flagged_keywords) {
+            diagText += `  • '${word}' (Spam Weight: +${score})\n`;
+        }
+    } else {
+        diagText += '\nNo high-risk spam trigger keywords found.';
+    }
+    diagContent.textContent = diagText;
+}
+
+// Store samples in JS
+const samples_data = {
+    {% for key, text in samples.items() %}
+    "{{ key }}": {{ text | tojson }},
+    {% endfor %}
+};
+
+// ===================================================================
+// Batch Analyzer Tab
+// ===================================================================
+const uploadArea = document.getElementById('uploadArea');
+const fileInput = document.getElementById('fileInput');
+const fileInfo = document.getElementById('fileInfo');
+const fileName = document.getElementById('fileName');
+const classifyBatchBtn = document.getElementById('classifyBatchBtn');
+const removeClassifyBtn = document.getElementById('removeClassifyBtn');
+const batchSummary = document.getElementById('batchSummary');
+const batchLoading = document.getElementById('batchLoading');
+const batchTableBody = document.getElementById('batchTableBody');
+const batchFilter = document.getElementById('batchFilter');
+const exportBatchBtn = document.getElementById('exportBatchBtn');
+
+let batchResults = [];
+
+uploadArea.addEventListener('click', () => fileInput.click());
+
+uploadArea.addEventListener('dragover', (e) => { e.preventDefault(); uploadArea.classList.add('dragover'); });
+uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('dragover'));
+uploadArea.addEventListener('drop', (e) => {
+    e.preventDefault();
+    uploadArea.classList.remove('dragover');
+    if (e.dataTransfer.files.length) {
+        fileInput.files = e.dataTransfer.files;
+        handleFileSelect();
+    }
+});
+
+fileInput.addEventListener('change', handleFileSelect);
+
+function handleFileSelect() {
+    if (fileInput.files.length) {
+        fileName.textContent = fileInput.files[0].name;
+        fileInfo.style.display = 'flex';
+    }
+}
+
+removeClassifyBtn.addEventListener('click', () => {
+    fileInput.value = '';
+    fileInfo.style.display = 'none';
+    batchSummary.style.display = 'none';
+    batchResults = [];
+});
+
+classifyBatchBtn.addEventListener('click', async () => {
+    if (!fileInput.files.length) return;
+
+    const formData = new FormData();
+    formData.append('file', fileInput.files[0]);
+
+    batchLoading.style.display = 'block';
+    batchSummary.style.display = 'none';
+
+    try {
+        const res = await fetch('/api/batch', { method: 'POST', body: formData });
+        const data = await res.json();
+
+        if (data.error) { alert(data.error); return; }
+
+        batchResults = data.results;
+        displayBatchResults(data);
+    } catch (e) {
+        alert('Error processing file.');
+    } finally {
+        batchLoading.style.display = 'none';
+    }
+});
+
+function displayBatchResults(data) {
+    batchSummary.style.display = 'block';
+    document.getElementById('batchTotal').textContent = data.total;
+    document.getElementById('batchSpam').textContent = data.spam_count;
+    document.getElementById('batchHam').textContent = data.ham_count;
+    document.getElementById('batchRate').textContent = data.spam_rate + '%';
+
+    renderBatchTable('all');
+}
+
+function renderBatchTable(filter) {
+    batchTableBody.innerHTML = '';
+    for (const r of batchResults) {
+        if (filter === 'spam' && !r.is_spam) continue;
+        if (filter === 'ham' && r.is_spam) continue;
+
+        const tag = r.is_spam ? '<span class="badge-spam">Spam</span>' : '<span class="badge-ham">Ham</span>';
+        const snippet = r.message.length > 80 ? r.message.substring(0, 80) + '...' : r.message;
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${r.id}</td><td>${tag}</td><td>${r.confidence}</td><td>${r.spam_probability}</td><td class="text-secondary" style="max-width:400px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${r.message.replace(/"/g, '&quot;')}">${snippet}</td>`;
+        batchTableBody.appendChild(tr);
+    }
+}
+
+batchFilter.addEventListener('change', () => renderBatchTable(batchFilter.value));
+
+exportBatchBtn.addEventListener('click', async () => {
+    if (!batchResults.length) return;
+    try {
+        const res = await fetch('/api/download_csv', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ results: batchResults })
+        });
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'classified_spam_results.csv';
+        a.click();
+        URL.revokeObjectURL(url);
+    } catch (e) {
+        alert('Error exporting CSV.');
+    }
+});
+</script>
+
+</body>
+</html>
