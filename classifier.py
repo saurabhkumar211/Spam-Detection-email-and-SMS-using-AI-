@@ -11,8 +11,8 @@ nltk.download('punkt_tab', quiet=True)
 nltk.download('stopwords', quiet=True)
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-MODEL_PATH = os.path.join(BASE_DIR, 'model.pkl')
-VECTORIZER_PATH = os.path.join(BASE_DIR, 'vectorizer.pkl')
+MODEL_PATH = os.path.join(BASE_DIR, 'models', 'model.pkl')
+VECTORIZER_PATH = os.path.join(BASE_DIR, 'models', 'vectorizer.pkl')
 
 ps = PorterStemmer()
 stop_words = set(stopwords.words('english'))

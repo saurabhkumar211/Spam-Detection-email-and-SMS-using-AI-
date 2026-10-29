@@ -59,7 +59,7 @@ def _classify_list(messages):
 @app.route("/")
 def index():
     """Render the main page."""
-    with open(os.path.join(BASE_DIR, "model_metrics.json"), "r") as f:
+    with open(os.path.join(BASE_DIR, "models", "metrics.json"), "r") as f:
         metrics = json.load(f)
 
     top_keywords = [
@@ -167,10 +167,12 @@ def api_download_csv():
 # Entry point
 # ---------------------------------------------------------------------------
 if __name__ == "__main__":
+    host = os.environ.get("HOST", "127.0.0.1")
+    port = int(os.environ.get("PORT", "5000"))
     print("=" * 60)
-    print("  AI Spam & Phishing Detection — Flask GUI")
+    print("  AI Spam & Phishing Detection - Web App")
     print("=" * 60)
-    print("  Open your browser at:  http://127.0.0.1:5000")
+    print(f"  Open your browser at:  http://{host}:{port}")
     print("  Press Ctrl+C to stop the server.")
     print("=" * 60)
-    app.run(host="127.0.0.1", port=5000, debug=True)
+    app.run(host=host, port=port, debug=False)

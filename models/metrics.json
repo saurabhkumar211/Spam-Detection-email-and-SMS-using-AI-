@@ -1,0 +1,16 @@
+{
+  "model_type": "Soft-Voting Ensemble (MNB + Calibrated LinearSVC + ExtraTrees + LogisticRegression)",
+  "clean_samples": 5169,
+  "vocabulary_size": 4000,
+  "test_accuracy": 98.26,
+  "test_precision": 98.29,
+  "test_recall": 87.79,
+  "test_f1_score": 92.74,
+  "test_roc_auc": 99.53,
+  "confusion_matrix": {
+    "true_negatives": 901,
+    "false_positives": 2,
+    "false_negatives": 16,
+    "true_positives": 115
+  }
+}

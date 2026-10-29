@@ -7,9 +7,13 @@ __pycache__/
 venv/
 .venv/
 .env
+.ipynb_checkpoints/
 
 # Local model backups
 *.bak
+
+# Notebook baseline artifacts
+models/nb_baseline*.pkl
 
 # Local-only research assets (not part of the code repo)
 AI_Agent_Phishing_Detection_Paper.docx
