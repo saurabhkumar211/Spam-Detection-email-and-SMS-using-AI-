@@ -4,6 +4,11 @@ venv
 .venv
 __pycache__
 *.pyc
+*.egg-info
+build
+dist
+tests
+docs
+scripts
 notebook
-*.docx
 .DS_Store

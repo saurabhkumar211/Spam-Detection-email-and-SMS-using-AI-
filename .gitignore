@@ -8,6 +8,10 @@ venv/
 .venv/
 .env
 .ipynb_checkpoints/
+build/
+dist/
+*.egg-info/
+.pytest_cache/
 
 # Local model backups
 *.bak
@@ -16,7 +20,6 @@ venv/
 models/nb_baseline*.pkl
 
 # Local-only research assets (not part of the code repo)
-AI_Agent_Phishing_Detection_Paper.docx
-Research_Paper_Blueprint_ICICC2027.docx
-create_blueprint_doc.py
-generate_agent_paper_doc.py
+docs/*.docx
+scripts/create_blueprint_doc.py
+scripts/generate_agent_paper_doc.py

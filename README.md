@@ -30,18 +30,23 @@ Two legitimate messages were flagged as spam, and sixteen spam messages were mis
 3. Classify with a soft-voting ensemble of Multinomial Naive Bayes, calibrated LinearSVC, ExtraTrees and LogisticRegression, weighted 1.5, 2.0, 1.5 and 1.0.
 4. Explain the result with the tokens that pushed the message toward spam. These come from the Naive Bayes feature log probabilities, not from a hand-written keyword list.
 
-`train_model.py` evaluates on the 80/20 split, then refits the final model on every cleaned row before saving it.
+The training script evaluates on the 80/20 split, then refits the final model on every cleaned row before saving it.
 
 ## Project structure
 
 ```
 .
-├── app.py                  # Flask web app
-├── classifier.py           # Shared preprocessing, prediction and explanations
-├── gui_app.py              # Desktop app
-├── train_model.py          # Training and evaluation script
-├── templates/
-│   └── index.html          # Web interface
+├── src/spam_detector/
+│   ├── __init__.py
+│   ├── config.py           # Project paths
+│   ├── classifier.py       # Preprocessing, prediction and explanations
+│   ├── app.py              # Flask web app
+│   ├── gui.py              # Desktop app
+│   ├── train.py            # Training and evaluation
+│   └── templates/
+│       └── index.html      # Web interface
+├── tests/
+│   └── test_classifier.py
 ├── data/
 │   └── spam.csv            # SMS Spam Collection
 ├── models/
@@ -50,8 +55,9 @@ Two legitimate messages were flagged as spam, and sixteen spam messages were mis
 │   └── metrics.json        # Benchmark scores
 ├── notebook/
 │   └── spam_detection.ipynb
-├── Dockerfile
+├── pyproject.toml
 ├── requirements.txt
+├── Dockerfile
 ├── run_web.command         # macOS / Linux launcher for the web app
 └── run_gui.command         # macOS / Linux launcher for the desktop app
 ```
@@ -65,10 +71,10 @@ git clone https://github.com/saurabhkumar211/Spam-Detection-email-and-SMS-using-
 cd Spam-Detection-email-and-SMS-using-AI-
 python3 -m venv venv
 source venv/bin/activate
-pip install -r requirements.txt
+pip install -e .
 ```
 
-On Windows, activate the environment with `venv\Scripts\activate`.
+The editable install adds the three commands used below and pulls the packages listed in `requirements.txt`. On Windows, activate the environment with `venv\Scripts\activate`.
 
 NLTK downloads the `punkt`, `punkt_tab` and `stopwords` corpora the first time `classifier.py` is imported. The downloads need a network connection. After that, the apps work offline.
 
@@ -79,7 +85,7 @@ If you use Homebrew Python on macOS, Tk is packaged separately. Install it with 
 ### Web app
 
 ```bash
-python app.py
+spam-detector-web
 ```
 
 Open http://127.0.0.1:5000. The page has a single-message checker with sample messages, batch upload with CSV export, and the model metrics shown at the bottom.
@@ -87,13 +93,13 @@ Open http://127.0.0.1:5000. The page has a single-message checker with sample me
 To expose it on a different host or port, set `HOST` and `PORT`:
 
 ```bash
-HOST=0.0.0.0 PORT=8080 python app.py
+HOST=0.0.0.0 PORT=8080 spam-detector-web
 ```
 
 ### Desktop app
 
 ```bash
-python gui_app.py
+spam-detector-gui
 ```
 
 The desktop app has dark and light themes, live confidence bars, keyword breakdowns, and batch processing. On macOS you can also double-click `run_web.command` or `run_gui.command`.
@@ -138,10 +144,18 @@ The image sets `HOST=0.0.0.0`. Local runs bind to `127.0.0.1` unless you overrid
 ## Retrain
 
 ```bash
-python train_model.py
+spam-detector-train
 ```
 
-The script drops nulls and duplicates from `data/spam.csv`, builds the features, runs the stratified split, prints the benchmark, refits on all rows, and overwrites the three files in `models/`. Expect about a minute on a laptop CPU.
+Training removes nulls and duplicates from `data/spam.csv`, builds the features, runs the stratified split, prints the benchmark, refits on all rows, and overwrites the three files in `models/`. Expect about a minute on a laptop CPU.
+
+## Tests
+
+```bash
+python -m unittest discover -s tests -v
+```
+
+The tests cover text cleaning and a handful of known spam and ham messages.
 
 ## Dataset
 
@@ -162,7 +176,7 @@ The choices that shaped the result:
 - The training data is SMS, not email. Long bodies and HTML email are out of distribution, so treat email results as untested.
 - There is no URL reputation, domain age or sender check. A short, well-written phishing message can still pass.
 - Recall is 87.8%, which means roughly one in eight spam messages gets through.
-- The saved artifacts depend on the scikit-learn version that created them. If loading fails after an upgrade, run `python train_model.py` again.
+- The saved artifacts depend on the scikit-learn version that created them. If loading fails after an upgrade, run `spam-detector-train` again.
 
 ## Possible next steps
 

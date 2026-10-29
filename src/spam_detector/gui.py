@@ -1,16 +1,9 @@
 import os
-import sys
 import threading
-import tkinter as tk
 from tkinter import filedialog, messagebox, ttk
 import customtkinter as ctk
 
-# Ensure script directory is in sys.path
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-if BASE_DIR not in sys.path:
-    sys.path.insert(0, BASE_DIR)
-
-import classifier
+from . import classifier
 
 # Set appearance and default color theme
 ctk.set_appearance_mode("Dark")
@@ -600,6 +593,10 @@ class SpamDetectorGUI(ctk.CTk):
             chip.grid(row=row, column=col, padx=4, pady=3, sticky="w")
 
 
-if __name__ == "__main__":
+def main():
     app = SpamDetectorGUI()
     app.mainloop()
+
+
+if __name__ == "__main__":
+    main()

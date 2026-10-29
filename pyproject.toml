@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "spam-detector"
+version = "0.1.0"
+description = "Spam and phishing detection for email and SMS"
+readme = "README.md"
+requires-python = ">=3.11"
+dynamic = ["dependencies"]
+
+[project.scripts]
+spam-detector-web = "spam_detector.app:main"
+spam-detector-gui = "spam_detector.gui:main"
+spam-detector-train = "spam_detector.train:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+spam_detector = ["templates/*.html"]
+
+[tool.setuptools.dynamic]
+dependencies = {file = ["requirements.txt"]}

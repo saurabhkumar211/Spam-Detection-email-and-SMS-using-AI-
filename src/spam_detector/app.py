@@ -1,21 +1,15 @@
-"""
-AI Spam & Phishing Detection System — Flask Web GUI
-Cross-platform (Mac / Windows) web interface for the spam classifier.
-"""
-import os
-import sys
+"""Flask web app for the spam classifier."""
+
 import csv
 import io
 import json
-
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-if BASE_DIR not in sys.path:
-    sys.path.insert(0, BASE_DIR)
+import os
 
 import pandas as pd
 from flask import Flask, render_template, request, jsonify, send_file
 
-import classifier
+from . import classifier
+from .config import METRICS_FILE
 
 app = Flask(__name__)
 app.config["MAX_CONTENT_LENGTH"] = 16 * 1024 * 1024  # 16 MB upload limit
@@ -59,7 +53,7 @@ def _classify_list(messages):
 @app.route("/")
 def index():
     """Render the main page."""
-    with open(os.path.join(BASE_DIR, "models", "metrics.json"), "r") as f:
+    with open(METRICS_FILE, "r") as f:
         metrics = json.load(f)
 
     top_keywords = [
@@ -166,7 +160,7 @@ def api_download_csv():
 # ---------------------------------------------------------------------------
 # Entry point
 # ---------------------------------------------------------------------------
-if __name__ == "__main__":
+def main():
     host = os.environ.get("HOST", "127.0.0.1")
     port = int(os.environ.get("PORT", "5000"))
     print("=" * 60)
@@ -176,3 +170,7 @@ if __name__ == "__main__":
     print("  Press Ctrl+C to stop the server.")
     print("=" * 60)
     app.run(host=host, port=port, debug=False)
+
+
+if __name__ == "__main__":
+    main()

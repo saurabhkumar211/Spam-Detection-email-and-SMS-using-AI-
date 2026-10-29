@@ -1,28 +1,26 @@
-import os
 import pickle
 import string
+
 import nltk
 from nltk.corpus import stopwords
 from nltk.stem.porter import PorterStemmer
+
+from .config import MODEL_FILE, VECTORIZER_FILE
 
 # Ensure NLTK data is available
 nltk.download('punkt', quiet=True)
 nltk.download('punkt_tab', quiet=True)
 nltk.download('stopwords', quiet=True)
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-MODEL_PATH = os.path.join(BASE_DIR, 'models', 'model.pkl')
-VECTORIZER_PATH = os.path.join(BASE_DIR, 'models', 'vectorizer.pkl')
-
 ps = PorterStemmer()
 stop_words = set(stopwords.words('english'))
 punct = set(string.punctuation)
 
 # Load model and vectorizer
-with open(VECTORIZER_PATH, 'rb') as f:
+with open(VECTORIZER_FILE, 'rb') as f:
     tfidf = pickle.load(f)
 
-with open(MODEL_PATH, 'rb') as f:
+with open(MODEL_FILE, 'rb') as f:
     raw_model_data = pickle.load(f)
 
 if isinstance(raw_model_data, dict):
