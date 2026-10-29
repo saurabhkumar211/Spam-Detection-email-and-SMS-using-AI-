@@ -91,6 +91,8 @@ HOST=0.0.0.0 PORT=8080 spam-detector-web
 
 On macOS you can double-click `run_web.command`. It uses `venv/bin/python` when that folder exists.
 
+If you prefer to run the module yourself, `python -m spam_detector.app` works from the project root, and `python app.py` works from inside `src/spam_detector`.
+
 ### Batch files
 
 Upload a `.csv` or `.txt` file. For CSV, the app looks for a column named `text`, `v2`, `message`, `sms`, `email`, `content` or `body`, then falls back to the first text column it finds.

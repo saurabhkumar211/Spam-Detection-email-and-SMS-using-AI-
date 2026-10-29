@@ -4,12 +4,20 @@ import csv
 import io
 import json
 import os
+import sys
+from pathlib import Path
 
 import pandas as pd
 from flask import Flask, render_template, request, jsonify, send_file
 
-from . import classifier
-from .config import METRICS_FILE
+if __package__ in (None, ""):
+    # Allow "python app.py" from this folder as well as "python -m spam_detector.app".
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+    from spam_detector import classifier
+    from spam_detector.config import METRICS_FILE
+else:
+    from . import classifier
+    from .config import METRICS_FILE
 
 app = Flask(__name__)
 app.config["MAX_CONTENT_LENGTH"] = 16 * 1024 * 1024  # 16 MB upload limit

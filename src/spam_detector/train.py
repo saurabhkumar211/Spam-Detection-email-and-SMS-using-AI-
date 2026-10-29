@@ -3,6 +3,7 @@ import pickle
 import string
 import sys
 import time
+from pathlib import Path
 
 import pandas as pd
 import nltk
@@ -21,7 +22,12 @@ from sklearn.metrics import (
     roc_auc_score, confusion_matrix
 )
 
-from .config import DATA_FILE, METRICS_FILE, MODEL_FILE, VECTORIZER_FILE
+if __package__ in (None, ""):
+    # Allow "python train.py" from this folder as well as "python -m spam_detector.train".
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+    from spam_detector.config import DATA_FILE, METRICS_FILE, MODEL_FILE, VECTORIZER_FILE
+else:
+    from .config import DATA_FILE, METRICS_FILE, MODEL_FILE, VECTORIZER_FILE
 
 # Ensure UTF-8 output on Windows consoles
 if sys.stdout.encoding != 'utf-8':
