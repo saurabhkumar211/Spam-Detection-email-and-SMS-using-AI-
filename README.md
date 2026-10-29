@@ -2,11 +2,11 @@
 
 A machine learning app that reads a message and decides whether it is spam or legitimate. The Flask web app shows the label, the spam probability, and the words that pushed the decision.
 
-The model trains on the SMS Spam Collection and is evaluated on a held-out 20% split. Training takes about a minute on a laptop CPU.
+The model trains on the SMS Spam Collection and is evaluated on a held-out 20% split. The stack is Python, Flask, scikit-learn, NLTK, and pandas. Training takes about a minute on a laptop CPU.
 
 ## Results
 
-The test set has 1,034 messages: 903 legitimate and 131 spam.
+The test set has 1,034 messages: 903 legitimate and 131 spam. The scores below come from `models/metrics.json`.
 
 | Metric | Score |
 | --- | --- |
@@ -16,12 +16,7 @@ The test set has 1,034 messages: 903 legitimate and 131 spam.
 | F1 score | 92.74% |
 | ROC-AUC | 99.53% |
 
-|  | Predicted ham | Predicted spam |
-| --- | --- | --- |
-| Actual ham | 901 | 2 |
-| Actual spam | 16 | 115 |
-
-Two legitimate messages were flagged and sixteen spam messages were missed. That is deliberate. In a messaging product, hiding a real message is worse than letting one spam text through, so the threshold sits at 0.5. You can change it in `classifier.py`.
+The decision threshold is 0.5. You can change it in `classifier.py`.
 
 ## How it works
 
@@ -32,9 +27,29 @@ Two legitimate messages were flagged and sixteen spam messages were missed. That
 
 Training scores the 80/20 split, then refits on every cleaned row before saving the model.
 
-## Notebook
+## ML notebook
 
-The main ML record is [`notebook/spam_detection.ipynb`](notebook/spam_detection.ipynb). It walks through data cleaning, exploratory data analysis, text preprocessing, word clouds, top spam and ham words, model comparison, voting, and stacking. The production version of the pipeline is `src/spam_detector/train.py`.
+The main ML record is [`notebook/spam_detection.ipynb`](notebook/spam_detection.ipynb). It starts from `data/spam.csv` and covers data cleaning, exploratory data analysis, text preprocessing, word clouds, and top spam and ham words. It then tests CountVectorizer and TF-IDF features and compares eleven classifiers on the TF-IDF set. The production version of the pipeline is `src/spam_detector/train.py`.
+
+### Model comparison
+
+The table shows the notebook's results on its 80/20 split.
+
+| Model | Accuracy | Precision |
+| --- | --- | --- |
+| ExtraTrees | 97.40% | 100.00% |
+| SVC | 96.59% | 97.62% |
+| XGBoost | 96.50% | 97.60% |
+| Random Forest | 96.41% | 98.36% |
+| Bagging | 95.87% | 92.42% |
+| Multinomial NB | 95.78% | 100.00% |
+| AdaBoost | 95.34% | 93.44% |
+| Logistic Regression | 94.44% | 94.44% |
+| Gradient Boosting | 94.26% | 96.08% |
+| Decision Tree | 92.38% | 85.44% |
+| K-Neighbors | 89.87% | 100.00% |
+
+ExtraTrees was the best single model at 97.40% accuracy. A soft-voting ensemble of SVC, Multinomial NB, and ExtraTrees reached 97.13% accuracy. Stacking the same three with a Random Forest final estimator reached 97.85%. The production pipeline uses four models and is scored separately in [Results](#results).
 
 ## Project structure
 
@@ -59,8 +74,7 @@ The main ML record is [`notebook/spam_detection.ipynb`](notebook/spam_detection.
 ├── notebook/
 │   └── spam_detection.ipynb  # ML walkthrough and experiments
 ├── pyproject.toml
-├── requirements.txt
-└── run_web.command         # macOS / Linux launcher
+└── requirements.txt
 ```
 
 ## Install
@@ -70,12 +84,16 @@ Python 3.11 or newer. The model files were built with Python 3.14 and scikit-lea
 ```bash
 git clone https://github.com/saurabhkumar211/Spam-Detection-email-and-SMS-using-AI-.git
 cd Spam-Detection-email-and-SMS-using-AI-
-python3 -m venv venv
-source venv/bin/activate
-pip install -e .
+python -m venv venv
 ```
 
-This installs the dependencies and two commands: `spam-detector-web` and `spam-detector-train`. On Windows, activate the environment with `venv\Scripts\activate`.
+Activate the virtual environment, then install the package:
+
+```bash
+python -m pip install -e .
+```
+
+This installs the dependencies and two commands: `spam-detector-web` and `spam-detector-train`.
 
 The first run downloads the NLTK `punkt`, `punkt_tab` and `stopwords` corpora, so it needs a network connection once.
 
@@ -87,11 +105,7 @@ spam-detector-web
 
 Open <http://127.0.0.1:5000>. The page checks a single message and loads sample messages. It also accepts a CSV or TXT file for batch classification and CSV export.
 
-To change the host or port, set `HOST` and `PORT`:
-
-```bash
-HOST=0.0.0.0 PORT=8080 spam-detector-web
-```
+The app binds to `127.0.0.1:5000` by default. Set `HOST` and `PORT` to change the address.
 
 You can also run the file directly:
 
@@ -99,8 +113,6 @@ You can also run the file directly:
 cd src/spam_detector
 python app.py
 ```
-
-On macOS you can double-click `run_web.command`. It uses `venv/bin/python` when that folder exists.
 
 ### Batch files
 
