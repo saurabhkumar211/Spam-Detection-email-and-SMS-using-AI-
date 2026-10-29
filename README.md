@@ -21,7 +21,7 @@ The test set has 1,034 messages: 903 legitimate and 131 spam.
 | Actual ham | 901 | 2 |
 | Actual spam | 16 | 115 |
 
-Two legitimate messages were flagged and sixteen spam messages were missed. That trade-off is deliberate. In a messaging product, hiding a real message is worse than letting one spam text through, so the threshold sits at 0.5. You can change it in `classifier.py`.
+Two legitimate messages were flagged and sixteen spam messages were missed. That is deliberate. In a messaging product, hiding a real message is worse than letting one spam text through, so the threshold sits at 0.5. You can change it in `classifier.py`.
 
 ## How it works
 
@@ -71,7 +71,7 @@ source venv/bin/activate
 pip install -e .
 ```
 
-The install adds `spam-detector-web` and `spam-detector-train`. On Windows, activate the environment with `venv\Scripts\activate`.
+This installs the dependencies and two commands: `spam-detector-web` and `spam-detector-train`. On Windows, activate the environment with `venv\Scripts\activate`.
 
 The first run downloads the NLTK `punkt`, `punkt_tab` and `stopwords` corpora, so it needs a network connection once.
 
@@ -81,7 +81,7 @@ The first run downloads the NLTK `punkt`, `punkt_tab` and `stopwords` corpora, s
 spam-detector-web
 ```
 
-Open http://127.0.0.1:5000. The page checks a single message, loads sample messages, and accepts a CSV or TXT file for batch classification with CSV export.
+Open <http://127.0.0.1:5000>. The page checks a single message and loads sample messages. It also accepts a CSV or TXT file for batch classification and CSV export.
 
 To change the host or port, set `HOST` and `PORT`:
 
@@ -89,15 +89,22 @@ To change the host or port, set `HOST` and `PORT`:
 HOST=0.0.0.0 PORT=8080 spam-detector-web
 ```
 
-On macOS you can double-click `run_web.command`. It uses `venv/bin/python` when that folder exists.
+You can also run the file directly:
 
-If you prefer to run the module yourself, `python -m spam_detector.app` works from the project root, and `python app.py` works from inside `src/spam_detector`.
+```bash
+cd src/spam_detector
+python app.py
+```
+
+On macOS you can double-click `run_web.command`. It uses `venv/bin/python` when that folder exists.
 
 ### Batch files
 
 Upload a `.csv` or `.txt` file. For CSV, the app looks for a column named `text`, `v2`, `message`, `sms`, `email`, `content` or `body`, then falls back to the first text column it finds.
 
 ### API
+
+`POST /api/classify` takes a JSON body and returns the label and probabilities:
 
 ```bash
 curl -X POST http://127.0.0.1:5000/api/classify \
@@ -116,10 +123,7 @@ curl -X POST http://127.0.0.1:5000/api/classify \
 }
 ```
 
-There are two more endpoints:
-
-- `POST /api/batch` accepts a multipart `file` field and returns per-row results with spam and ham counts.
-- `POST /api/download_csv` takes the JSON results and returns a CSV file.
+`POST /api/batch` accepts a `.csv` or `.txt` file and returns per-row results. `POST /api/download_csv` returns the results as a CSV file.
 
 ## Retrain
 
@@ -149,7 +153,6 @@ The SMS Spam Collection has 5,572 rows. After removing duplicates and nulls, 5,1
 
 - TF-IDF with bigrams and 4,000 features. Five thousand short messages do not need a bigger model, and sparse linear models train in seconds.
 - Soft voting across four models. Naive Bayes handles word frequencies, LinearSVC draws a clean boundary, ExtraTrees picks up token interactions, and logistic regression adds a stable linear view. The SVM carries the highest weight at 2.0.
-- Precision over recall. The model blocks 2 of 903 legitimate messages and misses 16 of 131 spam messages.
 
 ## Notebook
 
