@@ -76,6 +76,8 @@ pip install -e .
 
 The editable install adds the three commands used below and pulls the packages listed in `requirements.txt`. On Windows, activate the environment with `venv\Scripts\activate`.
 
+The two `.command` launchers pick up `venv/bin/python` automatically when that environment exists, so you can double-click them without activating anything first.
+
 NLTK downloads the `punkt`, `punkt_tab` and `stopwords` corpora the first time `classifier.py` is imported. The downloads need a network connection. After that, the apps work offline.
 
 If you use Homebrew Python on macOS, Tk is packaged separately. Install it with `brew install python-tk@3.14` before running the desktop app. Without it you will see `ModuleNotFoundError: No module named '_tkinter'`.
